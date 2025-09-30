@@ -1,0 +1,148 @@
+-- HW2
+-- ===================================
+
+use resturant_DB;
+
+
+-- ==============================================================================================
+-- Question 1: Find the average price of foods served at each restaurant
+-- ==============================================================================================
+
+select	resturants.name as resturants_name, 
+		avg(foods.price) as avg_price
+
+from resturants join serves on resturants.restID = serves.restID
+				join foods on serves.foodID = foods.foodID
+
+group by resturants_name
+order by avg_price desc;
+
+-- Orders the resturants from highest avg price to least avg price for each.
+-- Uses inner join on method, however you could also use using method.
+
+
+
+-- ==============================================================================================
+-- Question 2: Maximum Food Price at Each Restaurant
+-- ==============================================================================================
+
+select	resturants.name as resturants_name, 
+		MAX(foods.price) as max_price
+
+from resturants join serves using (restID)
+				join foods using(foodID)
+
+group by resturants_name
+order by max_price desc;
+
+-- Orders the resturants from most expensive food item to least
+-- Uses the inner join unless method 
+
+
+
+-- ==============================================================================================
+-- Question 3: Count of Different Food Types Served at Each Restaurant
+-- ==============================================================================================
+
+select	resturants.name as resturants_name, 
+		count(distinct foods.type) as foodtype_count
+
+from	resturants cross join serves 
+				cross join foods
+where	resturants.restID = serves.restID and serves.foodID = foods.foodID
+
+group by resturants_name
+order by foodtype_count desc;
+
+-- Uses a cross join to count how many differnt types of food are at each resturant.
+-- Needs distinct in front of foods.type so that it does not count duplicate types.
+
+
+
+
+-- ==============================================================================================
+-- Question 4: Average Price of Foods Served by Each Chef
+-- ==============================================================================================
+
+select	chefs.name as chef_name,	
+		avg(foods.price) as avg_price
+
+from	chefs join works using(chefID)
+		   join resturants using(restID)
+           join serves using(restID)
+           join foods using(foodID)
+
+group by chef_name
+order by avg_price desc;
+
+-- Finds the average price of each food depending on the chef in descending order using inner join
+
+
+
+
+-- ==============================================================================================
+-- Question 5: Find the Restaurant with the Highest Average Food Price 
+-- ==============================================================================================
+
+select	resturants.name as resturant_name,
+		avg(foods.price) as avg_price 
+
+from	resturants join serves on resturants.restID = serves.restID
+				join foods on serves.foodID = foods.foodID
+group by resturants.name
+having(avg(foods.price)) >= all
+	
+    -- Subquerry to find the max avg food price
+    (select avg(foods.price)
+    from resturants join serves on resturants.restID = serves.restID
+				    join foods on serves.foodID = foods.foodID
+	group by resturants.name);
+    
+    -- Similar to question one except ask for the highest avg.
+    -- Bc there is a tie, we cannot use Limit, instead we have to use having
+    -- Cannot use as because the subquerry will not read it from the main querry. 
+    
+-- ==============================================================================================
+-- Question 6: Determine which chef has the highest average price of the foods served at the restaurants where they work. 
+-- Include the chef’s name, the average food price, and the names of the restaurants where the chef works. 
+-- Sort the  results by the average food price in descending order.
+-- ==============================================================================================
+    
+select	chefs.name as chef_name, 
+		avg(foods.price) as avg_price, 
+		group_concat(distinct resturants.name 
+		order by resturants.name separator ',') as resturants_name
+
+from	chefs join works using(chefID)
+			  join resturants using(restID)
+              join serves using(restID)
+              join foods using(foodID)
+group by chefs.name
+having avg(foods.price) >= all 
+	
+    
+    
+	(select avg(foods.price)
+	from	chefs join works using(chefID)
+				  join resturants using(restID)
+                  join serves using(restID)
+                  join foods using(foodID)
+	group by chefs.chefID);
+    
+-- This is very similar to question 4 where we found the avg price of each found for each chef
+-- However this question wanted us to find the chef with the highest avg price for food
+-- It also wanted us to make a table which listed the chefs name, the resturant name, and the avg price
+-- This was a problem because in our data, chefs can work at multiple resturants. 
+-- To solve this we needed to use a MYSQL function named group_concat which can combine data from multiple rows into a singular one.
+-- This allowed us to list all the restuarants at which each chef worked, the chefs name, and the avg price of food.
+
+	
+
+			
+
+
+
+
+
+
+
